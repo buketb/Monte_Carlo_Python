@@ -1,0 +1,79 @@
+# Data_creation_visualiation:
+
+import numpy as np
+
+import matplotlib.pyplot as plt
+%matplotlib notebook
+
+import pandas as pd
+pd.options.display.float_format = '{:,.2f}'.format
+
+from IPython.display import display
+from sklearn import model_selection
+from sklearn.neighbors import KNeighborsClassifier
+
+def create_data(N):
+    data = np.zeros((N, 2), dtype = np.float32)
+    for i in range(N):
+        # sample y uniformly between 0 and 1
+        y = np.random.randint(2)
+        # use inverse transform sampling for x, given y
+        u = np.random.rand()
+        if 0 == y:
+            x = 1 - np.sqrt(1 - u)
+        else:
+            x = np.sqrt(u)
+        data[i,:] = (x,y)
+    return data
+
+# create a data set to visualize the distributions
+test_data = create_data(10000)
+X_0 = test_data[test_data[:,1] == 0][:,0]
+X_1 = test_data[test_data[:,1] == 1][:,0]
+
+
+# show prior and likelihoods for both classes as bar chart and histograms
+fig = plt.figure(figsize = (10, 3))
+
+plt.subplot(131)
+plt.title(r'prior for class $Y$')
+plt.bar([0, 1], [X_0.size, X_1.size], width = 0.6)
+plt.xticks([0,1]); plt.xlim([-0.5, 1.5]); plt.yticks([0,25000,50000], ['0', '25k', '50k'])
+
+plt.subplot(132)
+plt.title(r'likelihood for $Y = 0$')
+plt.hist(X_0, 50, normed = 1, facecolor = 'green', alpha = 0.5)
+plt.ylabel(r'$p(X = x \mid Y = 0)$')
+plt.plot([0,1], [2,0])
+
+plt.subplot(133)
+plt.title(r'likelihood for $Y = 1$')
+plt.hist(X_1, 50, normed = 1, facecolor = 'blue', alpha = 0.5)
+plt.ylabel(r'$p(X = x \mid Y = 1)$')
+plt.plot([0,1], [0,2])
+
+fig.tight_layout(); plt.show()
+
+# show cumulative distribution functions for both classes as plots
+fig = plt.figure(figsize = (10, 3))
+domain = np.linspace(0, 1, 50)
+
+plt.subplot(121)
+plt.title(r'cumulative distribution function for $Y = 0$')
+cdf_0 = np.array([np.count_nonzero(X_0 < t) for t in domain], dtype = np.float64); cdf_0 /= cdf_0.max()
+plt.plot(domain, cdf_0, label = r'$F_{X,0}(x)$ measured', linewidth = 2)
+plt.plot(domain, 2*domain - np.square(domain), '--', label = r'$F_{X,0}(x) = 2x - x^2$', linewidth = 2)
+plt.legend(loc = 'lower right')
+
+plt.subplot(122)
+plt.title(r'cumulative distribution function for $Y = 1$')
+cdf_1 = np.array([np.count_nonzero(X_1 < t) for t in domain], dtype = np.float64); cdf_1 /= cdf_1.max()
+plt.plot(domain, cdf_1, label = r'$F_{X,1}(x)$ measured', linewidth = 2)
+plt.plot(domain, np.square(domain), '--', label = r'$F_{X,1}(x) = x^2$', linewidth = 2)
+plt.legend(loc = 'upper left')
+
+fig.tight_layout(); plt.show()
+
+
+
+
